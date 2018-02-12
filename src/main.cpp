@@ -3,11 +3,33 @@
 Explicaço do codigo
 */
 //Program Defines
+//If it becomes too big, create a define file for this
 #define SAMPLE_FREQUENCY 20
 #define COM_CHECK 75
 #define SEL 38
 #define OE  39
 #define RST 40
+#define PWM_MOT4 6
+#define PWM_MOT3 7
+#define PWM_MOT2 8
+#define PWM_MOT1 9
+#define DISABLE1 A0
+#define DISABLE2 A1
+#define DISABLE3 A2
+#define DISABLE4 A3
+#define SW4      A4
+#define SW3      A5
+#define SW2      A6
+#define SW1      A7
+#define DIR_MOT1 A8
+#define DIR_MOT2 A9
+#define DIR_MOT3 A10
+#define DIR_MOT4 A11
+//Attention, break pins are active in LOW
+#define BRK_MOT1 A12
+#define BRK_MOT2 A13
+#define BRK_MOT3 A14
+#define BRK_MOT4 A15
 //      CLK  5  (Apenas para documentacao, essa definicao eh feita de maneira automatica.
 #define pi   3.14159
 
@@ -32,11 +54,21 @@ void setup() {
    pinMode(SEL, OUTPUT);
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
-   pinMode(39, OUTPUT);
+   //Set drive 1 pin modes
+   pinMode(BRK_MOT1, OUTPUT);
+   pinMode(DISABLE1, OUTPUT);
+   pinMode(DIR_MOT1, OUTPUT);
+
  //Da um pulso no pino reset para zerar o decodificador
    digitalWrite(RST, LOW);
    delay(400);
    digitalWrite(RST, HIGH);
+
+   //set some speed and direction in motor4
+   analogWrite(PWM_MOT1, 100);
+   digitalWrite(DIR_MOT1,HIGH);
+   digitalWrite(BRK_MOT1,HIGH);
+   digitalWrite(DISABLE1,HIGH);
 
 //Configuraçoes do Timer 4, usado para fazer a leitura constante do Encoder
 // initialize timer4
@@ -77,13 +109,13 @@ ISR(TIMER4_COMPA_vect)          // timer compare interrupt service routine
     digitalWrite(OE, LOW);
 
     //Uliza-se shift de 8 bits para leitura do byte mais significativo
-    //Using PORTB cause we're using decoder 4
-    DA = (PINB << 8);
+    //Using PORTA cause we're using decoder 1
+    DA = (PINA << 8);
     //LEITURA DOS PINOS LOW
     //Comando no pino SEL, agora os bits menos significativos serao lidos
     digitalWrite(SEL, HIGH);
     //Em caso de problemas, incluir delay
-    DA = DA | PINB;
+    DA = DA | PINA;
     current_position = DA;
 }
 
@@ -102,48 +134,7 @@ void returnKeyState(){};
 void stopEngine(){};
 // the loop function runs over and over again forever
 void loop() {
-  command = 0;
-  //Check if command arrives
-  if(Serial.available()) {
-    //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
-    while(Serial.available()>0)
-    {
-      //get incoming byte
-      char inByte = Serial.read();
-      //sending character back to serial port
-      //Conversion ASCII to int
-      int c = (int)inByte - 48;
-      command *= 10;
-      command += c;
-      delay(100);
-      }
-      Serial.print("Comando recebido: ");
-      Serial.print(command,DEC);
-      Serial.print('\n');
-
-      //call the function based on the command received
-      switch (command) {
-        // Command 1 returns communication ok
-        case 1:
-          communicationCheck();
-          break;
-        // Command 2 resolves speed and send back
-        case 2:
-          returnBatteryState();
-          break;
-        // Command 3 checks which battery is full
-        case 3:
-          returnKeyState();
-          break;
-        // Command 4 returns how many motors
-        case 4:
-          returnSpeed();
-          break;
-        // Command 5 stop system
-        case 5:
-          stopEngine();
-          break;
-      }
-    }
-
- }
+    delay(500);
+    //analogWrite(PWM_MOT1, 0);
+    Serial.println(returnSpeed());
+}
