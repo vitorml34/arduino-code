@@ -33,15 +33,34 @@ Explicaço do codigo
 //      CLK  5  (Apenas para documentacao, essa definicao eh feita de maneira automatica.
 #define pi   3.14159
 
-int DA = 0;
-int last_position = 0;
-int current_position = 0;
-float current_speed = 0;
+//Confirmar se alguns não são unsigned
+int V1 = 0;
+int V2 = 0;
+int V3 = 0;
+int V4 = 0;
+int last_position1 = 0;
+int last_position2 = 0;
+int last_position3 = 0;
+int last_position4 = 0;
+int current_position1 = 0;
+int current_position2 = 0;
+int current_position3 = 0;
+int current_position4 = 0;
+float current_speed1 = 0;
+float current_speed2 = 0;
+float current_speed3 = 0;
+float current_speed4 = 0;
 int inByte = 0;
 int command=0;
+byte send_data[] = {0,0,0,0,0x1};
+float pos4_graus = 0;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+  analogWrite(PWM_MOT1, 0);
+  analogWrite(PWM_MOT2, 0);
+  analogWrite(PWM_MOT3, 0);
+  analogWrite(PWM_MOT4, 0);
   // start serial port at 9600 bps
   Serial.begin(9600);
   delay(100);
@@ -54,28 +73,39 @@ void setup() {
    pinMode(SEL, OUTPUT);
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
-   //Set drive 1 pin modes
-   pinMode(BRK_MOT2, OUTPUT);
-   pinMode(DISABLE2, OUTPUT);
-   pinMode(DIR_MOT2, OUTPUT);
-   pinMode(BRK_MOT1, OUTPUT);
-   pinMode(DISABLE1, OUTPUT);
-   pinMode(DIR_MOT1, OUTPUT);
+   //Set drivers pins modes
+   pinMode(BRK_MOT3, OUTPUT);
+   pinMode(DISABLE3, OUTPUT);
+   pinMode(DIR_MOT3, OUTPUT);
+   pinMode(BRK_MOT4, OUTPUT);
+   pinMode(DISABLE4, OUTPUT);
+   pinMode(DIR_MOT4, OUTPUT);
 
  //Da um pulso no pino reset para zerar o decodificador
    digitalWrite(RST, LOW);
    delay(400);
    digitalWrite(RST, HIGH);
 
-   //set some speed and direction in motors
-   digitalWrite(DIR_MOT2,HIGH);
-   digitalWrite(BRK_MOT2,HIGH);
-   digitalWrite(DISABLE2,HIGH);
+   //set direction in motors
    digitalWrite(DIR_MOT1,HIGH);
+   digitalWrite(DIR_MOT2,HIGH);
+   digitalWrite(DIR_MOT3,HIGH);
+   digitalWrite(DIR_MOT4,HIGH);
+   //Turn off break (this signal is active in LOW)
    digitalWrite(BRK_MOT1,HIGH);
-   digitalWrite(DISABLE1,HIGH);
-   analogWrite(PWM_MOT1, 70);
-   analogWrite(PWM_MOT2, 70);
+   digitalWrite(BRK_MOT2,HIGH);
+   digitalWrite(BRK_MOT3,HIGH);
+   digitalWrite(BRK_MOT4,HIGH);
+   //Chose which motors are disabled (this signal is active in LOW)
+   digitalWrite(DISABLE1,LOW);
+   digitalWrite(DISABLE1,LOW);
+   digitalWrite(DISABLE3,LOW);
+   digitalWrite(DISABLE4,LOW);
+   //Set the motors speed
+   //analogWrite(PWM_MOT1, 50);
+   //analogWrite(PWM_MOT2, 50);
+   //analogWrite(PWM_MOT3, 50);
+   //analogWrite(PWM_MOT4, 50);
 
 //Configuraçoes do Timer 1, usado para fazer a leitura constante do Encoder
 // initialize timer1
@@ -97,6 +127,9 @@ void setup() {
   TCCR3A = _BV(COM3A0);              //toggle OC3A on compare match
   OCR3A = 7;                         //top value for counter
   TCCR3B = _BV(WGM12) | _BV(CS30);   //CTC mode, prescaler clock/1
+
+  //
+  delay(1000);
 }
 
 //***********FUNCTIONS*********************//
@@ -104,8 +137,16 @@ void setup() {
 //Rotina de Interrupçao do timer 1
 ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
 {
-    last_position = current_position;
-    DA=0;  //Int de 16 bits aonde a leitura ser armazenada
+    // Update last position
+    last_position1 = current_position1;
+    last_position2 = current_position2;
+    last_position3 = current_position3;
+    last_position4 = current_position4;
+    // Clear position variable
+    V1 = 0;
+    V2 = 0;
+    V3 = 0;
+    V4 = 0;
 //******LEITURA DOS ENCODERS*******
     //LEITURA DOS PINOS HIGH
     //Controle do Decodificador
@@ -115,23 +156,52 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
 
     //Uliza-se shift de 8 bits para leitura do byte mais significativo
     //Using PORTA cause we're using decoder 1
-    DA = (PINA << 8);
+    V1 = (PINA << 8);
+    V2 = (PINC << 8);
+    V3 = (PINL << 8);
+    V4 = (PINB << 8);
     //LEITURA DOS PINOS LOW
     //Comando no pino SEL, agora os bits menos significativos serao lidos
     digitalWrite(SEL, HIGH);
     //Em caso de problemas, incluir delay
-    DA = DA | PINA;
-    current_position = DA;
+    V1 = V1 | PINA;
+    V2 = V2 | PINC;
+    V3 = V3 | PINL;
+    V4 = V4 | PINB;
+    //Update current positions
+    current_position1 = V1;
+    current_position2 = V2;
+    current_position3 = V3;
+    current_position4 = V4;
+    pos4_graus = current_position4*360/8000;
 }
 
 void communicationCheck(){
     Serial.write(COM_CHECK);
 }
 
-float returnSpeed(){
+float returnSpeed1(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed = (current_position-last_position)*(2*pi/8000)*(SAMPLE_FREQUENCY);
-    return current_speed;
+    current_speed1 = (current_position1-last_position1)*(2*pi/8000)*(SAMPLE_FREQUENCY);
+    return current_speed1;
+}
+
+float returnSpeed2(){
+    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
+    current_speed2 = (current_position2-last_position2)*(2*pi/8000)*(SAMPLE_FREQUENCY);
+    return current_speed4;
+}
+
+float returnSpeed3(){
+    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
+    current_speed3 = (current_position3-0)*(2*180.0/8000)*(1);
+    return current_speed3;
+}
+
+float returnSpeed4(){
+    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
+    current_speed4 = (current_position4-0)*(2*180.0/8000)*(1);
+    return current_speed4;
 }
 
 void returnBatteryState(){};
@@ -139,6 +209,11 @@ void returnKeyState(){};
 void stopEngine(){};
 // the loop function runs over and over again forever
 void loop() {
+    // delay(10);
+    // Serial.println(returnSpeed3(),3);
+
+    //delay(500);
+    //Serial.println(returnSpeed());
     command = 0;
     //Check if command arrives
     if(Serial.available()) {
@@ -173,7 +248,7 @@ void loop() {
                 break;
             // Command 4 returns how many motors
             case 4:
-                returnSpeed();
+                returnSpeed4();
                 break;
             // Command 5 stop system
             case 5:
