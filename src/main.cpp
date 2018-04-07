@@ -74,11 +74,19 @@ void setup() {
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
    //Set drivers pins modes
+   pinMode(BRK_MOT1, OUTPUT);
+   pinMode(BRK_MOT2, OUTPUT);
    pinMode(BRK_MOT3, OUTPUT);
-   pinMode(DISABLE3, OUTPUT);
-   pinMode(DIR_MOT3, OUTPUT);
    pinMode(BRK_MOT4, OUTPUT);
+
+   pinMode(DISABLE1, OUTPUT);
+   pinMode(DISABLE2, OUTPUT);
+   pinMode(DISABLE3, OUTPUT);
    pinMode(DISABLE4, OUTPUT);
+
+   pinMode(DIR_MOT1, OUTPUT);
+   pinMode(DIR_MOT2, OUTPUT);
+   pinMode(DIR_MOT3, OUTPUT);
    pinMode(DIR_MOT4, OUTPUT);
 
  //Da um pulso no pino reset para zerar o decodificador
@@ -98,7 +106,7 @@ void setup() {
    digitalWrite(BRK_MOT4,HIGH);
    //Chose which motors are disabled (this signal is active in LOW)
    digitalWrite(DISABLE1,LOW);
-   digitalWrite(DISABLE1,LOW);
+   digitalWrite(DISABLE2,LOW);
    digitalWrite(DISABLE3,LOW);
    digitalWrite(DISABLE4,LOW);
    //Set the motors speed
@@ -130,6 +138,7 @@ void setup() {
 
   //
   delay(1000);
+
 }
 
 //***********FUNCTIONS*********************//
@@ -209,51 +218,98 @@ void returnKeyState(){};
 void stopEngine(){};
 // the loop function runs over and over again forever
 void loop() {
-    // delay(10);
-    // Serial.println(returnSpeed3(),3);
 
-    //delay(500);
-    //Serial.println(returnSpeed());
-    command = 0;
-    //Check if command arrives
-    if(Serial.available()) {
-    //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
-        while(Serial.available()>0){
-            //get incoming byte
-            char inByte = Serial.read();
-            //sending character back to serial port
-            //Conversion ASCII to int
-            int c = (int)inByte - 48;
-            command *= 10;
-            command += c;
-            delay(100);
-        }
-        Serial.print("Comando recebido: ");
-        Serial.print(command,DEC);
-        Serial.print('\n');
+    //Enable motor
+    delay(4000);
+    digitalWrite(DISABLE1,HIGH);
+    digitalWrite(DISABLE2,HIGH);
+    digitalWrite(DISABLE3,HIGH);
+    digitalWrite(DISABLE4,HIGH);
 
-        //call the function based on the command received
-        switch (command) {
-            // Command 1 returns communication ok
-            case 1:
-                communicationCheck();
-                break;
-            // Command 2 resolves speed and send back
-            case 2:
-                returnBatteryState();
-                break;
-            // Command 3 checks which battery is full
-            case 3:
-                returnKeyState();
-                break;
-            // Command 4 returns how many motors
-            case 4:
-                returnSpeed4();
-                break;
-            // Command 5 stop system
-            case 5:
-                stopEngine();
-                break;
-        }
-    }
+    //set higher speed
+    analogWrite(PWM_MOT1, 150);
+    analogWrite(PWM_MOT2, 150);
+    analogWrite(PWM_MOT3, 150);
+    analogWrite(PWM_MOT4, 150);
+    delay(3000);
+
+    //set one speed
+    analogWrite(PWM_MOT1, 100);
+    analogWrite(PWM_MOT2, 100);
+    analogWrite(PWM_MOT3, 100);
+    analogWrite(PWM_MOT4, 100);
+    delay(3000);
+    //set lower speed
+    analogWrite(PWM_MOT1, 50);
+    analogWrite(PWM_MOT2, 50);
+    analogWrite(PWM_MOT3, 50);
+    analogWrite(PWM_MOT4, 50);
+    delay(3000);
+    //break
+    digitalWrite(BRK_MOT1,LOW);
+    digitalWrite(BRK_MOT2,LOW);
+    digitalWrite(BRK_MOT3,LOW);
+    digitalWrite(BRK_MOT4,LOW);
+    delay(3000);
+    //DISABLE
+    digitalWrite(DISABLE1,LOW);
+    digitalWrite(DISABLE2,LOW);
+    digitalWrite(DISABLE3,LOW);
+    digitalWrite(DISABLE4,LOW);
+
+    digitalWrite(BRK_MOT1,HIGH);
+    digitalWrite(BRK_MOT2,HIGH);
+    digitalWrite(BRK_MOT3,HIGH);
+    digitalWrite(BRK_MOT4,HIGH);
+
+    analogWrite(PWM_MOT1, 0);
+    analogWrite(PWM_MOT2, 0);
+    analogWrite(PWM_MOT3, 0);
+    analogWrite(PWM_MOT4, 0);
+    delay(3000);
+
+    // //delay(500);
+    // //Serial.println(returnSpeed());
+    // command = 0;
+    // //Check if command arrives
+    // if(Serial.available()) {
+    // //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
+    //     while(Serial.available()>0){
+    //         //get incoming byte
+    //         char inByte = Serial.read();
+    //         //sending character back to serial port
+    //         //Conversion ASCII to int
+    //         int c = (int)inByte - 48;
+    //         command *= 10;
+    //         command += c;
+    //         delay(100);
+    //     }
+    //     Serial.print("Comando recebido: ");
+    //     Serial.print(command,DEC);
+    //     Serial.print('\n');
+    //
+    //     //call the function based on the command received
+    //     switch (command) {
+    //         // Command 1 returns communication ok
+    //         case 1:
+    //             communicationCheck();
+    //             break;
+    //         // Command 2 resolves speed and send back
+    //         case 2:
+    //             returnBatteryState();
+    //             break;
+    //         // Command 3 checks which battery is full
+    //         case 3:
+    //             returnKeyState();
+    //             break;
+    //         // Command 4 returns how many motors
+    //         case 4:
+    //             returnSpeed4();
+    //             break;
+    //         // Command 5 stop system
+    //         case 5:
+    //             stopEngine();
+    //             break;
+    //     }
+    // }
 }
