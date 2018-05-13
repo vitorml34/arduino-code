@@ -50,10 +50,17 @@ float current_speed1 = 0;
 float current_speed2 = 0;
 float current_speed3 = 0;
 float current_speed4 = 0;
-int inByte = 0;
+int inByte = 70;
 int command=0;
-byte send_data[] = {0,0,0,0,0x1};
+//int i;
+byte speed1[] ={0,0};
+signed int test = 34000;
 float pos4_graus = 0;
+
+unsigned char i;
+int j;
+
+unsigned char speeds [9] = {9 , 3, 12, 9, 7, 20, 13, 2, 5};
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -74,11 +81,19 @@ void setup() {
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
    //Set drivers pins modes
+   pinMode(BRK_MOT1, OUTPUT);
+   pinMode(BRK_MOT2, OUTPUT);
    pinMode(BRK_MOT3, OUTPUT);
-   pinMode(DISABLE3, OUTPUT);
-   pinMode(DIR_MOT3, OUTPUT);
    pinMode(BRK_MOT4, OUTPUT);
+
+   pinMode(DISABLE1, OUTPUT);
+   pinMode(DISABLE2, OUTPUT);
+   pinMode(DISABLE3, OUTPUT);
    pinMode(DISABLE4, OUTPUT);
+
+   pinMode(DIR_MOT1, OUTPUT);
+   pinMode(DIR_MOT2, OUTPUT);
+   pinMode(DIR_MOT3, OUTPUT);
    pinMode(DIR_MOT4, OUTPUT);
 
  //Da um pulso no pino reset para zerar o decodificador
@@ -98,7 +113,7 @@ void setup() {
    digitalWrite(BRK_MOT4,HIGH);
    //Chose which motors are disabled (this signal is active in LOW)
    digitalWrite(DISABLE1,LOW);
-   digitalWrite(DISABLE1,LOW);
+   digitalWrite(DISABLE2,LOW);
    digitalWrite(DISABLE3,LOW);
    digitalWrite(DISABLE4,LOW);
    //Set the motors speed
@@ -130,6 +145,7 @@ void setup() {
 
   //
   delay(1000);
+
 }
 
 //***********FUNCTIONS*********************//
@@ -173,16 +189,15 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
     current_position2 = V2;
     current_position3 = V3;
     current_position4 = V4;
-    pos4_graus = current_position4*360/8000;
 }
 
 void communicationCheck(){
     Serial.write(COM_CHECK);
 }
 
-float returnSpeed1(){
+int returnSpeed1(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed1 = (current_position1-last_position1)*(2*pi/8000)*(SAMPLE_FREQUENCY);
+    current_speed1 = (current_position1-0)*(1)*(1);
     return current_speed1;
 }
 
@@ -204,56 +219,80 @@ float returnSpeed4(){
     return current_speed4;
 }
 
+void returnSpeed(){
+
+    Serial.println(returnSpeed1());
+    delay(8);
+    Serial.println(2012);
+    delay(8);
+    Serial.println(3023);
+    delay(8);
+    Serial.println(4034);
+    delay(8);
+    Serial.println(i);
+    delay(8);
+}
+
 void returnBatteryState(){};
 void returnKeyState(){};
 void stopEngine(){};
 // the loop function runs over and over again forever
 void loop() {
-    // delay(10);
-    // Serial.println(returnSpeed3(),3);
 
-    //delay(500);
-    //Serial.println(returnSpeed());
-    command = 0;
-    //Check if command arrives
-    if(Serial.available()) {
-    //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
-        while(Serial.available()>0){
-            //get incoming byte
-            char inByte = Serial.read();
-            //sending character back to serial port
-            //Conversion ASCII to int
-            int c = (int)inByte - 48;
-            command *= 10;
-            command += c;
-            delay(100);
-        }
-        Serial.print("Comando recebido: ");
-        Serial.print(command,DEC);
-        Serial.print('\n');
+    // put your main code here, to run repeatedly:
+    j=0;
+    for(unsigned char l=0;l<9;l++)
+        speeds[l]=l;
 
-        //call the function based on the command received
-        switch (command) {
-            // Command 1 returns communication ok
-            case 1:
-                communicationCheck();
-                break;
-            // Command 2 resolves speed and send back
-            case 2:
-                returnBatteryState();
-                break;
-            // Command 3 checks which battery is full
-            case 3:
-                returnKeyState();
-                break;
-            // Command 4 returns how many motors
-            case 4:
-                returnSpeed4();
-                break;
-            // Command 5 stop system
-            case 5:
-                stopEngine();
-                break;
+    for (i=0;i<100;i++){
+        Serial.write(speeds,9);
+
+        for(int k=0;k<9;k++)
+            speeds[k]++;
+
+        if (i>49 && j==0){
+            delay(1000);
+            j++;
         }
+        delay(10);
     }
+    delay (1000);
+    //command = 0;
+    //Check if command arrives
+    // if(Serial.available()) {
+    //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
+
+        //get incoming byte
+        //char command = 70;
+        //TODO: Check if command is valid, in this case send ACK, if not, ERROR
+
+        //TODO if command is valid, enter switch case
+        //call the function based on the command received
+    //    switch (command) {
+            // Command 1 returns communication ok
+            // case 1:
+            //     communicationCheck();
+            //     break;
+            // // Command 2 resolves speed and send back
+            // case 2:
+            //     returnBatteryState();
+            //     break;
+            // // Command 3 checks which battery is full
+            // case 3:
+            //     returnKeyState();
+            //     break;
+            // // Command 4 returns how many motors
+            // case 0x5E:
+            //     returnSpeed();
+            //     break;
+            // // Command 5 stop system
+            // case 5:
+            //     stopEngine();
+            //     break;
+
+            // default:
+            //     Serial.print(command);
+
+        // }
+    //}
 }
