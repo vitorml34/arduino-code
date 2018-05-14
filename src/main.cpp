@@ -50,10 +50,18 @@ float current_speed1 = 0;
 float current_speed2 = 0;
 float current_speed3 = 0;
 float current_speed4 = 0;
-int inByte = 0;
+int inByte = 70;
 int command=0;
-byte send_data[] = {0,0,0,0,0x1};
+int motor;
+//int i;
+byte speed1[] ={0,0};
+signed int test = 34000;
 float pos4_graus = 0;
+
+unsigned char i;
+int j;
+
+unsigned char speeds [9] = {9 , 3, 12, 9, 7, 20, 13, 2, 5};
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -74,11 +82,19 @@ void setup() {
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
    //Set drivers pins modes
+   pinMode(BRK_MOT1, OUTPUT);
+   pinMode(BRK_MOT2, OUTPUT);
    pinMode(BRK_MOT3, OUTPUT);
-   pinMode(DISABLE3, OUTPUT);
-   pinMode(DIR_MOT3, OUTPUT);
    pinMode(BRK_MOT4, OUTPUT);
+
+   pinMode(DISABLE1, OUTPUT);
+   pinMode(DISABLE2, OUTPUT);
+   pinMode(DISABLE3, OUTPUT);
    pinMode(DISABLE4, OUTPUT);
+
+   pinMode(DIR_MOT1, OUTPUT);
+   pinMode(DIR_MOT2, OUTPUT);
+   pinMode(DIR_MOT3, OUTPUT);
    pinMode(DIR_MOT4, OUTPUT);
 
  //Da um pulso no pino reset para zerar o decodificador
@@ -98,7 +114,7 @@ void setup() {
    digitalWrite(BRK_MOT4,HIGH);
    //Chose which motors are disabled (this signal is active in LOW)
    digitalWrite(DISABLE1,LOW);
-   digitalWrite(DISABLE1,LOW);
+   digitalWrite(DISABLE2,LOW);
    digitalWrite(DISABLE3,LOW);
    digitalWrite(DISABLE4,LOW);
    //Set the motors speed
@@ -130,6 +146,7 @@ void setup() {
 
   //
   delay(1000);
+
 }
 
 //***********FUNCTIONS*********************//
@@ -173,87 +190,132 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
     current_position2 = V2;
     current_position3 = V3;
     current_position4 = V4;
-    pos4_graus = current_position4*360/8000;
 }
 
-void communicationCheck(){
-    Serial.write(COM_CHECK);
-}
+void motor_test(int motr){
 
-float returnSpeed1(){
-    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed1 = (current_position1-last_position1)*(2*pi/8000)*(SAMPLE_FREQUENCY);
-    return current_speed1;
-}
-
-float returnSpeed2(){
-    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed2 = (current_position2-last_position2)*(2*pi/8000)*(SAMPLE_FREQUENCY);
-    return current_speed4;
-}
-
-float returnSpeed3(){
-    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed3 = (current_position3-0)*(2*180.0/8000)*(1);
-    return current_speed3;
-}
-
-float returnSpeed4(){
-    //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed4 = (current_position4-0)*(2*180.0/8000)*(1);
-    return current_speed4;
-}
-
-void returnBatteryState(){};
-void returnKeyState(){};
-void stopEngine(){};
-// the loop function runs over and over again forever
-void loop() {
-    // delay(10);
-    // Serial.println(returnSpeed3(),3);
-
-    //delay(500);
-    //Serial.println(returnSpeed());
-    command = 0;
-    //Check if command arrives
-    if(Serial.available()) {
-    //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
-        while(Serial.available()>0){
-            //get incoming byte
-            char inByte = Serial.read();
-            //sending character back to serial port
-            //Conversion ASCII to int
-            int c = (int)inByte - 48;
-            command *= 10;
-            command += c;
-            delay(100);
-        }
-        Serial.print("Comando recebido: ");
-        Serial.print(command,DEC);
-        Serial.print('\n');
-
-        //call the function based on the command received
-        switch (command) {
-            // Command 1 returns communication ok
-            case 1:
-                communicationCheck();
-                break;
-            // Command 2 resolves speed and send back
-            case 2:
-                returnBatteryState();
-                break;
-            // Command 3 checks which battery is full
-            case 3:
-                returnKeyState();
-                break;
-            // Command 4 returns how many motors
-            case 4:
-                returnSpeed4();
-                break;
-            // Command 5 stop system
-            case 5:
-                stopEngine();
-                break;
-        }
+    if(motr==1){
+        Serial.println("Motor ativado");
+        delay(4000);
+        digitalWrite(DISABLE1,HIGH);
+        Serial.println("Velocidade Alta");
+        analogWrite(PWM_MOT1, 90);
+        delay(3000);
+        Serial.println("Velocidade Média");
+        analogWrite(PWM_MOT1, 60);
+        delay(3000);
+        Serial.println("Velocidade Baixa");
+        analogWrite(PWM_MOT1, 30);
+        delay(3000);
+        Serial.println("Freio");
+        digitalWrite(BRK_MOT1,LOW);
+        delay(3000);
+        Serial.println("Motor desativado");
+        digitalWrite(DISABLE1,LOW);
+        // Turn off break, otherwise, when motor is enabled again, it won't spin
+        digitalWrite(BRK_MOT1,HIGH);
+        // Set speed back to 0
+        analogWrite(PWM_MOT1, 0);
     }
+
+    if(motr==2){
+        Serial.println("Motor ativado");
+        delay(4000);
+        digitalWrite(DISABLE2,HIGH);
+        Serial.println("Velocidade Alta");
+        analogWrite(PWM_MOT2, 90);
+        delay(3000);
+        Serial.println("Velocidade Média");
+        analogWrite(PWM_MOT2, 60);
+        delay(3000);
+        Serial.println("Velocidade Baixa");
+        analogWrite(PWM_MOT2, 30);
+        delay(3000);
+        Serial.println("Freio");
+        digitalWrite(BRK_MOT2,LOW);
+        delay(3000);
+        Serial.println("Motor desativado");
+        digitalWrite(DISABLE2,LOW);
+        // Turn off break, otherwise, when motor is enabled again, it won't spin
+        digitalWrite(BRK_MOT2,HIGH);
+        // Set speed back to 0
+        analogWrite(PWM_MOT2, 0);
+    }
+
+    if(motr==3){
+        Serial.println("Motor ativado");
+        delay(4000);
+        digitalWrite(DISABLE3,HIGH);
+        Serial.println("Velocidade Alta");
+        analogWrite(PWM_MOT3, 90);
+        delay(3000);
+        Serial.println("Velocidade Média");
+        analogWrite(PWM_MOT3, 60);
+        delay(3000);
+        Serial.println("Velocidade Baixa");
+        analogWrite(PWM_MOT3, 30);
+        delay(3000);
+        Serial.println("Freio");
+        digitalWrite(BRK_MOT3,LOW);
+        delay(3000);
+        Serial.println("Motor desativado");
+        digitalWrite(DISABLE3,LOW);
+        // Turn off break, otherwise, when motor is enabled again, it won't spin
+        digitalWrite(BRK_MOT3,HIGH);
+        // Set speed back to 0
+        analogWrite(PWM_MOT3, 0);
+    }
+
+    if(motr==4){
+        Serial.println("Motor ativado");
+        delay(4000);
+        digitalWrite(DISABLE4,HIGH);
+        Serial.println("Velocidade Alta");
+        analogWrite(PWM_MOT4, 90);
+        delay(3000);
+        Serial.println("Velocidade Média");
+        analogWrite(PWM_MOT4, 60);
+        delay(3000);
+        Serial.println("Velocidade Baixa");
+        analogWrite(PWM_MOT4, 30);
+        delay(3000);
+        Serial.println("Freio");
+        digitalWrite(BRK_MOT4,LOW);
+        delay(3000);
+        Serial.println("Motor desativado");
+        digitalWrite(DISABLE4,LOW);
+        // Turn off break, otherwise, when motor is enabled again, it won't spin
+        digitalWrite(BRK_MOT4,HIGH);
+        // Set speed back to 0
+        analogWrite(PWM_MOT4, 0);
+    }
+}
+
+void loop() {
+    delay(100);
+    Serial.println("Qual motor?");
+
+    // Wait until some byte arrives
+    while(Serial.available()==0){};
+    delay(100);
+    while(Serial.available()>0){
+        //get incoming byte
+        char inByte = Serial.read();
+        //sending character back to serial port
+        //Conversion ASCII to int
+        motor = (int)inByte - 48;
+        if ( ( motor<1 ) || ( motor>4 ) ){
+            Serial.print("Valor ");
+            Serial.print(motor);
+            Serial.println(" não é aceito");}
+        else{
+            Serial.print("Iniciando teste com motor ");
+            Serial.println(motor);
+            motor_test(motor);
+            }
+        delay(1000);
+
+
+    }
+
 }
