@@ -9,6 +9,7 @@ Explicaço do codigo
 #define SEL 38
 #define OE  39
 #define RST 40
+#define BATTERY_STATE 4
 #define PWM_MOT4 6
 #define PWM_MOT3 7
 #define PWM_MOT2 8
@@ -52,6 +53,7 @@ float current_speed3 = 0;
 float current_speed4 = 0;
 int inByte = 0;
 int command=0;
+char battery_is_ok=1;
 byte send_data[] = {0,0,0,0,0x1};
 float pos4_graus = 0;
 
@@ -73,6 +75,8 @@ void setup() {
    pinMode(SEL, OUTPUT);
    pinMode(OE, OUTPUT);
    pinMode(41, OUTPUT);
+
+   pinMode(BATTERY_STATE, INPUT);
    //Set drivers pins modes
    pinMode(BRK_MOT1, OUTPUT);
    pinMode(BRK_MOT2, OUTPUT);
@@ -189,29 +193,46 @@ void communicationCheck(){
     Serial.write(COM_CHECK);
 }
 
+void check_batery(){
+//     if (digitalRead(BATTERY_STATE)==HIGH){
+//         digitalWrite(DISABLE1,LOW);
+//         digitalWrite(DISABLE2,HIGH);
+//         digitalWrite(DISABLE3,LOW);
+//         digitalWrite(DISABLE4,LOW);
+//         //Set the motors speed
+//         //analogWrite(PWM_MOT1, 50);
+//         analogWrite(PWM_MOT2, 30);
+//         //analogWrite(PWM_MOT3, 50);
+//         //analogWrite(PWM_MOT4, 50);
+//     }
+//
+}
+
 float returnSpeed1(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed1 = (current_position1-last_position1)*(2*pi/8000)*(SAMPLE_FREQUENCY);
+    current_speed1 = current_position1;
     return current_speed1;
 }
 
 float returnSpeed2(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed2 = (current_position2-last_position2)*(2*pi/8000)*(SAMPLE_FREQUENCY);
+    current_speed2 = current_position2;
     return current_speed4;
 }
 
 float returnSpeed3(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed3 = (current_position3-0)*(2*180.0/8000)*(1);
+    current_speed3 = current_position3;
     return current_speed3;
 }
 
 float returnSpeed4(){
     //current_speed eh signed int, a velocidade pode ser negativa ou positiva
-    current_speed4 = (current_position4-0)*(2*180.0/8000)*(1);
+    current_speed4 = current_position4;
     return current_speed4;
 }
+
+
 
 void returnBatteryState(){};
 void returnKeyState(){};
@@ -219,97 +240,8 @@ void stopEngine(){};
 // the loop function runs over and over again forever
 void loop() {
 
-    //Enable motor
-    delay(4000);
-    digitalWrite(DISABLE1,HIGH);
-    digitalWrite(DISABLE2,HIGH);
-    digitalWrite(DISABLE3,HIGH);
-    digitalWrite(DISABLE4,HIGH);
+    delay(100);
+    Serial.println(((unsigned int) current_position2));
 
-    //set higher speed
-    analogWrite(PWM_MOT1, 150);
-    analogWrite(PWM_MOT2, 150);
-    analogWrite(PWM_MOT3, 150);
-    analogWrite(PWM_MOT4, 150);
-    delay(3000);
 
-    //set one speed
-    analogWrite(PWM_MOT1, 100);
-    analogWrite(PWM_MOT2, 100);
-    analogWrite(PWM_MOT3, 100);
-    analogWrite(PWM_MOT4, 100);
-    delay(3000);
-    //set lower speed
-    analogWrite(PWM_MOT1, 50);
-    analogWrite(PWM_MOT2, 50);
-    analogWrite(PWM_MOT3, 50);
-    analogWrite(PWM_MOT4, 50);
-    delay(3000);
-    //break
-    digitalWrite(BRK_MOT1,LOW);
-    digitalWrite(BRK_MOT2,LOW);
-    digitalWrite(BRK_MOT3,LOW);
-    digitalWrite(BRK_MOT4,LOW);
-    delay(3000);
-    //DISABLE
-    digitalWrite(DISABLE1,LOW);
-    digitalWrite(DISABLE2,LOW);
-    digitalWrite(DISABLE3,LOW);
-    digitalWrite(DISABLE4,LOW);
-
-    digitalWrite(BRK_MOT1,HIGH);
-    digitalWrite(BRK_MOT2,HIGH);
-    digitalWrite(BRK_MOT3,HIGH);
-    digitalWrite(BRK_MOT4,HIGH);
-
-    analogWrite(PWM_MOT1, 0);
-    analogWrite(PWM_MOT2, 0);
-    analogWrite(PWM_MOT3, 0);
-    analogWrite(PWM_MOT4, 0);
-    delay(3000);
-
-    // //delay(500);
-    // //Serial.println(returnSpeed());
-    // command = 0;
-    // //Check if command arrives
-    // if(Serial.available()) {
-    // //Leitura Byte a Byte, enquanto chega byte, monta-se o numero
-    //     while(Serial.available()>0){
-    //         //get incoming byte
-    //         char inByte = Serial.read();
-    //         //sending character back to serial port
-    //         //Conversion ASCII to int
-    //         int c = (int)inByte - 48;
-    //         command *= 10;
-    //         command += c;
-    //         delay(100);
-    //     }
-    //     Serial.print("Comando recebido: ");
-    //     Serial.print(command,DEC);
-    //     Serial.print('\n');
-    //
-    //     //call the function based on the command received
-    //     switch (command) {
-    //         // Command 1 returns communication ok
-    //         case 1:
-    //             communicationCheck();
-    //             break;
-    //         // Command 2 resolves speed and send back
-    //         case 2:
-    //             returnBatteryState();
-    //             break;
-    //         // Command 3 checks which battery is full
-    //         case 3:
-    //             returnKeyState();
-    //             break;
-    //         // Command 4 returns how many motors
-    //         case 4:
-    //             returnSpeed4();
-    //             break;
-    //         // Command 5 stop system
-    //         case 5:
-    //             stopEngine();
-    //             break;
-    //     }
-    // }
 }
